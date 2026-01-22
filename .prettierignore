@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+package-lock.json
+pnpm-lock.yaml
+public/sw.js
+public/workbox-*.js

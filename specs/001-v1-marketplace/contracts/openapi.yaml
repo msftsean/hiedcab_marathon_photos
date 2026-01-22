@@ -1,0 +1,1006 @@
+openapi: 3.1.0
+info:
+  title: Marathon Photo Marketplace API
+  version: 1.0.0
+  description: |
+    API for the V1 Core Marketplace - a two-sided photo marketplace where runners
+    search for race photos by bib number and purchase watermark-free downloads.
+
+    ## Authentication
+    - Public endpoints (search, checkout) require no authentication
+    - Photographer endpoints require Supabase Auth JWT
+    - Webhook endpoints use Stripe signature verification
+
+    ## Rate Limiting
+    - Search: 60 requests/minute per IP
+    - Upload: 100 requests/minute per authenticated user
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+  - url: http://localhost:3000/api
+    description: Development
+
+tags:
+  - name: Search
+    description: Public photo search endpoints
+  - name: Photos
+    description: Photo management (photographers)
+  - name: Checkout
+    description: Purchase and download
+  - name: Events
+    description: Event management
+  - name: Dashboard
+    description: Photographer dashboard
+  - name: Auth
+    description: Authentication flows
+  - name: Webhooks
+    description: External service webhooks
+
+paths:
+  # ==================== SEARCH ====================
+  /search:
+    get:
+      operationId: searchPhotos
+      summary: Search photos by bib number
+      description: |
+        Search for race photos by bib number. No authentication required (FR-001).
+        Results are watermarked previews (FR-002).
+      tags: [Search]
+      parameters:
+        - name: bib
+          in: query
+          required: true
+          description: Bib number to search for
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 10
+            example: "12345"
+        - name: event_id
+          in: query
+          description: Filter by specific event
+          schema:
+            type: string
+            format: uuid
+        - name: sort
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [quality, recent]
+            default: quality
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: cursor
+          in: query
+          description: Pagination cursor
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /photos/{id}:
+    get:
+      operationId: getPhoto
+      summary: Get photo details
+      description: Get photo details including watermarked preview
+      tags: [Photos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Photo details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== CHECKOUT ====================
+  /checkout/session:
+    post:
+      operationId: createCheckoutSession
+      summary: Create checkout session
+      description: |
+        Create a Stripe Checkout session for guest checkout (FR-003).
+        No authentication required.
+      tags: [Checkout]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCheckoutRequest'
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutSessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /checkout/session/{sessionId}:
+    get:
+      operationId: getCheckoutSession
+      summary: Get checkout session status
+      description: Check status of a checkout session
+      tags: [Checkout]
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutSessionStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /downloads/{transactionId}:
+    get:
+      operationId: getDownloads
+      summary: Get download links
+      description: |
+        Get download links for purchased photos (FR-004, FR-005).
+        Validates purchase before providing signed URLs.
+      tags: [Checkout]
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: email
+          in: query
+          required: true
+          description: Email used for purchase (for guest verification)
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: Download links
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadLinksResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== EVENTS ====================
+  /events:
+    get:
+      operationId: listEvents
+      summary: List events
+      description: List race events with photos
+      tags: [Events]
+      parameters:
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: search
+          in: query
+          description: Search by event name or location
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Event list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventListResponse'
+
+    post:
+      operationId: createEvent
+      summary: Create event
+      description: Create a new race event (photographers only)
+      tags: [Events]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /events/{id}:
+    get:
+      operationId: getEvent
+      summary: Get event details
+      tags: [Events]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== PHOTO UPLOAD ====================
+  /upload/presigned:
+    post:
+      operationId: getUploadUrl
+      summary: Get presigned upload URL
+      description: |
+        Get presigned URL(s) for bulk photo upload (FR-009).
+        Supports uploading multiple photos in one request.
+      tags: [Photos]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignedUploadRequest'
+      responses:
+        '200':
+          description: Presigned URLs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresignedUploadResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /upload/complete:
+    post:
+      operationId: completeUpload
+      summary: Complete upload batch
+      description: |
+        Signal completion of upload batch to trigger AI processing.
+        Initiates bib detection (FR-010).
+      tags: [Photos]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteUploadRequest'
+      responses:
+        '202':
+          description: Processing started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadBatchStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== PHOTOGRAPHER DASHBOARD ====================
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      summary: Get dashboard statistics
+      description: Get photographer's sales and earnings statistics (FR-012)
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, all]
+            default: 30d
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/photos:
+    get:
+      operationId: getPhotographerPhotos
+      summary: List photographer's photos
+      description: List photos with processing status and sales data
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by OCR status
+          schema:
+            type: string
+            enum: [pending, processing, completed, failed, manual_review]
+        - name: event_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Photo list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotographerPhotoList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/photos/{id}/bibs:
+    put:
+      operationId: updatePhotoBibs
+      summary: Update photo bib numbers
+      description: Manually update bib numbers for a photo (FR-011 review flow)
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBibsRequest'
+      responses:
+        '200':
+          description: Bibs updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /dashboard/payouts:
+    get:
+      operationId: getPayouts
+      summary: Get payout history
+      description: Get photographer's payout history (FR-013)
+      tags: [Dashboard]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_transit, paid, failed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payout list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== AUTH ====================
+  /auth/stripe-connect/link:
+    get:
+      operationId: getStripeConnectLink
+      summary: Get Stripe Connect onboarding link
+      description: Get link to start/continue Stripe Connect onboarding (FR-008)
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Onboarding link
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  expires_at:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/stripe-connect/dashboard:
+    get:
+      operationId: getStripeDashboardLink
+      summary: Get Stripe Express Dashboard link
+      description: Get link to Stripe Express Dashboard for payouts/settings
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard link
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== WEBHOOKS ====================
+  /webhooks/stripe:
+    post:
+      operationId: handleStripeWebhook
+      summary: Handle Stripe webhook
+      description: |
+        Receive and process Stripe webhook events.
+        Handles: checkout.session.completed, charge.refunded, charge.dispute.created,
+        account.updated, payout.paid, payout.failed
+      tags: [Webhooks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed
+        '400':
+          description: Invalid signature
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth JWT token
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # ==================== COMMON ====================
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          example: "validation_error"
+        message:
+          type: string
+          example: "Bib number is required"
+        details:
+          type: object
+
+    Pagination:
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        has_more:
+          type: boolean
+
+    # ==================== SEARCH ====================
+    SearchResponse:
+      type: object
+      required: [photos, pagination]
+      properties:
+        bib_number:
+          type: string
+        event:
+          $ref: '#/components/schemas/EventSummary'
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhotoPreview'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    PhotoPreview:
+      type: object
+      required: [id, thumbnail_url, watermarked_url, price_cents]
+      properties:
+        id:
+          type: string
+          format: uuid
+        thumbnail_url:
+          type: string
+          format: uri
+        watermarked_url:
+          type: string
+          format: uri
+        event_id:
+          type: string
+          format: uuid
+        event_name:
+          type: string
+        event_date:
+          type: string
+          format: date
+        quality_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        price_cents:
+          type: integer
+          example: 100
+        bib_confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    PhotoDetail:
+      allOf:
+        - $ref: '#/components/schemas/PhotoPreview'
+        - type: object
+          properties:
+            width:
+              type: integer
+            height:
+              type: integer
+            photographer_id:
+              type: string
+              format: uuid
+            bibs:
+              type: array
+              items:
+                $ref: '#/components/schemas/BibDetection'
+
+    BibDetection:
+      type: object
+      properties:
+        bib_number:
+          type: string
+        confidence:
+          type: number
+        is_verified:
+          type: boolean
+
+    # ==================== CHECKOUT ====================
+    CreateCheckoutRequest:
+      type: object
+      required: [photo_ids, email]
+      properties:
+        photo_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 50
+        email:
+          type: string
+          format: email
+        success_url:
+          type: string
+          format: uri
+        cancel_url:
+          type: string
+          format: uri
+
+    CheckoutSessionResponse:
+      type: object
+      required: [session_id, checkout_url]
+      properties:
+        session_id:
+          type: string
+        checkout_url:
+          type: string
+          format: uri
+        amount_cents:
+          type: integer
+        photo_count:
+          type: integer
+        bundle_applied:
+          type: string
+          enum: [single, pack_5, pack_10, pack_20]
+          nullable: true
+
+    CheckoutSessionStatus:
+      type: object
+      properties:
+        session_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, expired]
+        transaction_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    DownloadLinksResponse:
+      type: object
+      required: [transaction_id, downloads]
+      properties:
+        transaction_id:
+          type: string
+          format: uuid
+        downloads:
+          type: array
+          items:
+            type: object
+            properties:
+              photo_id:
+                type: string
+                format: uuid
+              download_url:
+                type: string
+                format: uri
+              expires_at:
+                type: string
+                format: date-time
+
+    # ==================== EVENTS ====================
+    EventSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        date:
+          type: string
+          format: date
+        location:
+          type: string
+        photo_count:
+          type: integer
+
+    Event:
+      allOf:
+        - $ref: '#/components/schemas/EventSummary'
+        - type: object
+          properties:
+            description:
+              type: string
+            cover_image_url:
+              type: string
+              format: uri
+            created_at:
+              type: string
+              format: date-time
+
+    EventDetail:
+      allOf:
+        - $ref: '#/components/schemas/Event'
+        - type: object
+          properties:
+            photographers:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  display_name:
+                    type: string
+                  photo_count:
+                    type: integer
+
+    EventListResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventSummary'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CreateEventRequest:
+      type: object
+      required: [name, date, location]
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        date:
+          type: string
+          format: date
+        location:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+
+    # ==================== UPLOAD ====================
+    PresignedUploadRequest:
+      type: object
+      required: [event_id, files]
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        files:
+          type: array
+          items:
+            type: object
+            required: [filename, content_type, size_bytes]
+            properties:
+              filename:
+                type: string
+              content_type:
+                type: string
+                enum: [image/jpeg, image/png]
+              size_bytes:
+                type: integer
+                maximum: 52428800  # 50MB
+          minItems: 1
+          maxItems: 500  # FR-009
+
+    PresignedUploadResponse:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        uploads:
+          type: array
+          items:
+            type: object
+            properties:
+              filename:
+                type: string
+              photo_id:
+                type: string
+                format: uuid
+              upload_url:
+                type: string
+                format: uri
+              expires_at:
+                type: string
+                format: date-time
+
+    CompleteUploadRequest:
+      type: object
+      required: [batch_id, photo_ids]
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        photo_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs of successfully uploaded photos
+
+    UploadBatchStatus:
+      type: object
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+        total_photos:
+          type: integer
+        processing:
+          type: integer
+        completed:
+          type: integer
+        failed:
+          type: integer
+
+    # ==================== DASHBOARD ====================
+    DashboardStats:
+      type: object
+      properties:
+        total_photos:
+          type: integer
+        searchable_photos:
+          type: integer
+        photos_needing_review:
+          type: integer
+        total_earnings_cents:
+          type: integer
+        total_sales:
+          type: integer
+        period_earnings_cents:
+          type: integer
+        period_sales:
+          type: integer
+        period:
+          type: string
+
+    PhotographerPhotoList:
+      type: object
+      properties:
+        photos:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/PhotoDetail'
+              - type: object
+                properties:
+                  ocr_status:
+                    type: string
+                    enum: [pending, processing, completed, failed, manual_review]
+                  purchase_count:
+                    type: integer
+                  earnings_cents:
+                    type: integer
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    UpdateBibsRequest:
+      type: object
+      required: [bibs]
+      properties:
+        bibs:
+          type: array
+          items:
+            type: object
+            required: [bib_number]
+            properties:
+              bib_number:
+                type: string
+              is_verified:
+                type: boolean
+                default: true
+
+    PayoutList:
+      type: object
+      properties:
+        payouts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              amount_cents:
+                type: integer
+              status:
+                type: string
+                enum: [pending, in_transit, paid, failed, canceled]
+              period_start:
+                type: string
+                format: date-time
+              period_end:
+                type: string
+                format: date-time
+              transaction_count:
+                type: integer
+              initiated_at:
+                type: string
+                format: date-time
+                nullable: true
+              completed_at:
+                type: string
+                format: date-time
+                nullable: true
+        pagination:
+          $ref: '#/components/schemas/Pagination'
