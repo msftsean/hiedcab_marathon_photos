@@ -146,36 +146,51 @@ tests/
 
 ### MVP Milestone Achieved ✅
 
+**Status**: App is running and functional at `localhost:3000`
+
 The MVP (User Story 1) is now functional:
 - ✅ Bib number search returns watermarked photos
 - ✅ Photo preview with zoom capability
 - ✅ Shopping cart with bundle pricing
-- ✅ Guest checkout via Stripe
+- ✅ Guest checkout via Stripe (UI ready, needs Stripe test keys)
 - ✅ Checkout success page with download links
 - ✅ Download API with signed URLs
+- ✅ Home page with feature highlights and navigation
 
-### Environment Setup Notes
+### Dependencies Added
+
+```json
+{
+  "lucide-react": "^0.468.0"  // Icons for UI
+}
+```
+
+### Environment Setup
 
 **Supabase Configuration**:
 - Using cloud Supabase (local Docker had WSL2 compatibility issues on Windows)
 - Project URL: `https://ipqfebnelpmpzsjhiitu.supabase.co`
 - Database migrations applied via `npx supabase db push`
-- Seed data applied manually via SQL Editor
+- Seed data applied manually via Supabase SQL Editor
 
-**Configuration Changes Made**:
-- `.env.local` - Cloud Supabase credentials configured
-- `next.config.js` - Added `picsum.photos` to image remotePatterns for seed data images
-- `supabase/seed.sql` - Fixed to include `auth.users` insert (foreign key requirement) and removed non-existent `is_active` column
+**Required Environment Variables** (`.env.local`):
+```
+NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+```
 
 **Test Data**:
-- Test photographer: `photographer@test.com` / `password123`
 - Test bib numbers: `12345` (3 photos), `12346` (1 photo), `67890` (1 photo)
 - Test events: Boston Marathon 2026, NYC Half Marathon 2026, Chicago 10K 2026
 
 ### Known Issues / Workarounds
 
 1. **Local Supabase on Windows**: Docker containers crash due to WSL2 `RLIMIT_NOFILE` issue. Workaround: Use cloud Supabase.
-2. **Seed data URLs**: Photos use `storage.test` placeholder URLs; real implementation needs Supabase Storage URLs.
+2. **Seed data URLs**: Photos use placeholder URLs; real implementation needs Supabase Storage URLs.
 3. **Stripe keys**: Using placeholder test keys; replace with actual Stripe test keys for payment testing.
 
 ### Next Steps
