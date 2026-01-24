@@ -10,6 +10,45 @@
 
 ---
 
+## 🚀 Quickstart (5 minutes)
+
+Get the app running locally in 5 steps:
+
+```bash
+# 1. Clone and install
+git clone https://github.com/msftsean/hiedcab_marathon_photos.git
+cd hiedcab_marathon_photos
+pnpm install
+
+# 2. Set up environment
+cp .env.example .env.local
+
+# 3. Start Supabase (requires Docker)
+pnpm supabase start
+
+# 4. Run database migrations and seed data
+pnpm supabase db push
+pnpm supabase db seed
+
+# 5. Start the app
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and search for bib **12345** to see test photos.
+
+### Test Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| Photographer | photographer@test.com | password123 |
+
+### Test Bib Numbers
+
+Search these to see sample photos: **12345**, **12346**, **67890**
+
+---
+
+
 ## 📊 Project Status
 
 ### Overall Progress: 45% Complete
