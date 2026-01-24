@@ -1,4 +1,4 @@
-# ÌøÉ Marathon Photo Marketplace
+# Marathon Photo Marketplace
 
 > A two-sided marketplace where runners find and purchase race photos by bib number, and photographers monetize their work with instant payouts.
 
@@ -10,60 +10,56 @@
 
 ---
 
-## Ì≥ä Project Status
+## Project Status
 
-### Overall Progress
-
-```
-‚ñà‚ñà‚ñà‚ñà‚ñà‚ñà‚ñà‚ñà‚ñà‚ñà‚ñà‚ñà‚ñà‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë‚ñë  45% Complete
-```
+### Overall Progress: 45% Complete
 
 ### Phase Completion
 
 | Phase | Status | Progress | Description |
 |-------|--------|----------|-------------|
-| Ì¥ß **Phase 1: Setup** | ‚úÖ Complete | 100% | Infrastructure & tooling |
-| ÌøóÔ∏è **Phase 2: Foundation** | ‚úÖ Complete | 100% | Database, auth, UI components |
-| Ìªí **Phase 3: MVP (Runner Purchase)** | ‚úÖ Complete | 100% | Search ‚Üí Cart ‚Üí Checkout ‚Üí Download |
-| Ì≥∏ **Phase 4: Photographer Upload** | ‚è≥ Pending | 0% | Bulk upload with AI bib detection |
-| Ì≥à **Phase 5: Photographer Dashboard** | ‚è≥ Pending | 0% | Sales analytics & earnings |
-| Ì±§ **Phase 6: Runner Accounts** | ‚è≥ Pending | 0% | Order history & notifications |
-| ‚ú® **Phase 7: Polish** | ‚è≥ Pending | 0% | Performance, PWA, cross-browser |
+| **Phase 1: Setup** | Complete | 100% | Infrastructure & tooling |
+| **Phase 2: Foundation** | Complete | 100% | Database, auth, UI components |
+| **Phase 3: MVP (Runner Purchase)** | Complete | 100% | Search, Cart, Checkout, Download |
+| **Phase 4: Photographer Upload** | Pending | 0% | Bulk upload with AI bib detection |
+| **Phase 5: Photographer Dashboard** | Pending | 0% | Sales analytics & earnings |
+| **Phase 6: Runner Accounts** | Pending | 0% | Order history & notifications |
+| **Phase 7: Polish** | Pending | 0% | Performance, PWA, cross-browser |
 
 ### MVP Features Status
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Ì¥ç Bib Number Search | ‚úÖ Working | <2s response time |
-| Ì∂ºÔ∏è Watermarked Previews | ‚úÖ Working | Gallery + modal preview |
-| Ìªí Shopping Cart | ‚úÖ Working | Zustand state management |
-| Ì≤≥ Guest Checkout | ‚úÖ Working | Stripe integration |
-| Ì≥• Photo Downloads | ‚úÖ Working | Signed URLs |
-| Ì≥± Mobile Responsive | ‚úÖ Working | Mobile-first design |
+| Bib Number Search | Working | <2s response time |
+| Watermarked Previews | Working | Gallery + modal preview |
+| Shopping Cart | Working | Zustand state management |
+| Guest Checkout | Working | Stripe integration |
+| Photo Downloads | Working | Signed URLs |
+| Mobile Responsive | Working | Mobile-first design |
 
 ---
 
-## ÌæØ Features
+## Features
 
-### For Runners ÌøÉ
+### For Runners
 
-- **Ì¥ç Instant Bib Search** ‚Äî Find your photos by bib number, no account required
-- **Ì±Ä Preview Before Buy** ‚Äî View watermarked previews before purchasing
-- **Ìªí Easy Checkout** ‚Äî Guest checkout with credit card via Stripe
-- **Ì≥• Instant Downloads** ‚Äî Get high-res, watermark-free photos immediately
-- **Ì≥¶ Bundle Pricing** ‚Äî Save with photo bundles (5 for $4, 10 for $7, 20 for $12)
+- **Instant Bib Search** - Find your photos by bib number, no account required
+- **Preview Before Buy** - View watermarked previews before purchasing
+- **Easy Checkout** - Guest checkout with credit card via Stripe
+- **Instant Downloads** - Get high-res, watermark-free photos immediately
+- **Bundle Pricing** - Save with photo bundles (5 for $4, 10 for $7, 20 for $12)
 
-### For Photographers Ì≥∏
+### For Photographers
 
-- **Ì≥§ Bulk Upload** ‚Äî Upload 500+ photos per batch
-- **Ì¥ñ AI Bib Detection** ‚Äî Automatic bib number tagging via Azure AI Vision
-- **Ì≤∞ 70% Revenue Share** ‚Äî Keep $0.70 for every $1 photo sold
-- **Ì≥ä Real-time Dashboard** ‚Äî Track sales and earnings instantly
-- **Ìø¶ Auto Payouts** ‚Äî Direct deposits via Stripe Connect
+- **Bulk Upload** - Upload 500+ photos per batch
+- **AI Bib Detection** - Automatic bib number tagging via Azure AI Vision
+- **70% Revenue Share** - Keep $0.70 for every $1 photo sold
+- **Real-time Dashboard** - Track sales and earnings instantly
+- **Auto Payouts** - Direct deposits via Stripe Connect
 
 ---
 
-## Ìª†Ô∏è Tech Stack
+## Tech Stack
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
@@ -82,7 +78,7 @@
 
 ---
 
-## Ì∫Ä Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -143,42 +139,37 @@ pnpm supabase:db:seed   # Seed test data
 
 ---
 
-## Ì≥Å Project Structure
+## Project Structure
 
 ```
-‚îú‚îÄ‚îÄ docs/                     # Ì≥Ñ Documentation & prompts
-‚îÇ   ‚îú‚îÄ‚îÄ github-copilot-prp-metaprompt.md
-‚îÇ   ‚îî‚îÄ‚îÄ marathon-photo-marketplace-prp.md
-‚îú‚îÄ‚îÄ public/                   # Ìºê Static assets
-‚îÇ   ‚îú‚îÄ‚îÄ icons/
-‚îÇ   ‚îú‚îÄ‚îÄ images/
-‚îÇ   ‚îî‚îÄ‚îÄ screenshots/
-‚îú‚îÄ‚îÄ specs/                    # Ì≥ã Feature specifications
-‚îÇ   ‚îî‚îÄ‚îÄ 001-v1-marketplace/
-‚îú‚îÄ‚îÄ src/
-‚îÇ   ‚îú‚îÄ‚îÄ app/                  # Next.js App Router
-‚îÇ   ‚îÇ   ‚îú‚îÄ‚îÄ (public)/         # Public routes (search, checkout)
-‚îÇ   ‚îÇ   ‚îî‚îÄ‚îÄ api/              # API routes
-‚îÇ   ‚îú‚îÄ‚îÄ components/           # React components
-‚îÇ   ‚îú‚îÄ‚îÄ hooks/                # Custom React hooks
-‚îÇ   ‚îú‚îÄ‚îÄ lib/                  # Utilities & clients
-‚îÇ   ‚îú‚îÄ‚îÄ styles/               # Global styles
-‚îÇ   ‚îî‚îÄ‚îÄ types/                # TypeScript definitions
-‚îú‚îÄ‚îÄ supabase/
-‚îÇ   ‚îú‚îÄ‚îÄ functions/            # Edge Functions
-‚îÇ   ‚îú‚îÄ‚îÄ migrations/           # Database migrations
-‚îÇ   ‚îî‚îÄ‚îÄ seed.sql              # Test data
-‚îî‚îÄ‚îÄ tests/
-    ‚îú‚îÄ‚îÄ e2e/                  # Playwright E2E tests
-    ‚îú‚îÄ‚îÄ fixtures/             # Test fixtures
-    ‚îú‚îÄ‚îÄ integration/          # API tests
-    ‚îú‚îÄ‚îÄ mocks/                # Test mocks
-    ‚îî‚îÄ‚îÄ unit/                 # Unit tests
+vibes/
+  docs/                     Documentation & prompts
+  public/                   Static assets (icons, images, screenshots)
+  specs/                    Feature specifications
+  src/
+    app/                    Next.js App Router
+      (public)/             Public routes (search, checkout)
+      api/                  API routes
+    components/             React components
+    hooks/                  Custom React hooks
+    lib/                    Utilities & clients
+    styles/                 Global styles
+    types/                  TypeScript definitions
+  supabase/
+    functions/              Edge Functions
+    migrations/             Database migrations
+    seed.sql                Test data
+  tests/
+    e2e/                    Playwright E2E tests
+    fixtures/               Test fixtures
+    integration/            API tests
+    mocks/                  Test mocks
+    unit/                   Unit tests
 ```
 
 ---
 
-## Ì≤∞ Pricing Model
+## Pricing Model
 
 | Option | Price | Per Photo |
 |--------|-------|-----------|
@@ -191,17 +182,17 @@ pnpm supabase:db:seed   # Seed test data
 
 ---
 
-## Ì∑™ Test Data
+## Test Data
 
 | Type | Value | Notes |
 |------|-------|-------|
-| Ì≥ß Test Photographer | `photographer@test.com` | Password: `password123` |
-| Ìø∑Ô∏è Test Bib Numbers | `12345`, `12346`, `67890` | Search these to see photos |
-| ÌøÉ Test Events | Boston Marathon, NYC Half, Chicago 10K | 2026 dates |
+| Test Photographer | photographer@test.com | Password: password123 |
+| Test Bib Numbers | 12345, 12346, 67890 | Search these to see photos |
+| Test Events | Boston Marathon, NYC Half, Chicago 10K | 2026 dates |
 
 ---
 
-## Ì≥ñ Documentation
+## Documentation
 
 - [Feature Specification](specs/001-v1-marketplace/spec.md)
 - [Implementation Plan](specs/001-v1-marketplace/plan.md)
@@ -211,12 +202,12 @@ pnpm supabase:db:seed   # Seed test data
 
 ---
 
-## Ì≥Ñ License
+## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
 <p align="center">
-  <strong>ÌøÉ Find your finish line photos. Ì≥∏ Monetize your race photography.</strong>
+  <strong>Find your finish line photos. Monetize your race photography.</strong>
 </p>
