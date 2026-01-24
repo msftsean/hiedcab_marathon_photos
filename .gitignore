@@ -60,3 +60,5 @@ public/workbox-*.js.map
 *.tmp
 *.temp
 .cache/
+# Claude local settings
+.claude/settings.local.json
