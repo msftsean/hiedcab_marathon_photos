@@ -130,75 +130,159 @@ tests/
 
 ## Progress & Status
 
-**Last Updated**: 2026-01-22
+**Last Updated**: 2026-01-23
+
+### Overall Progress
+
+```
+█████████████░░░░░░░░░░░░░░░░░  43% Complete (65/150 tasks)
+```
 
 ### Phase Completion
 
-| Phase | Status | Tasks | Notes |
-|-------|--------|-------|-------|
-| Phase 1: Setup | ✅ Complete | T001-T010 | All infrastructure in place |
-| Phase 2: Foundational | ✅ Complete | T011-T037 | Database, auth, UI components ready |
-| Phase 3: User Story 1 (MVP) | ✅ Complete | T038-T065 | Runner purchase flow working |
-| Phase 4: User Story 2 | ⏳ Not Started | T066-T098 | Photographer upload flow |
-| Phase 5: User Story 3 | ⏳ Not Started | T099-T119 | Photographer dashboard |
-| Phase 6: User Story 4 | ⏳ Not Started | T120-T132 | Runner accounts |
-| Phase 7: Polish | ⏳ Not Started | T133-T150 | Cross-cutting concerns |
+| Phase | Status | Tasks | Progress | Notes |
+|-------|--------|-------|----------|-------|
+| Phase 1: Setup | ✅ Complete | T001-T010 | 10/10 | Infrastructure ready |
+| Phase 2: Foundational | ✅ Complete | T011-T037 | 27/27 | Database, auth, UI components |
+| Phase 3: User Story 1 (MVP) | ✅ Complete | T038-T065 | 28/28 | Runner purchase flow |
+| Phase 4: User Story 2 | ⏳ Not Started | T066-T098 | 0/33 | Photographer upload |
+| Phase 5: User Story 3 | ⏳ Not Started | T099-T119 | 0/21 | Photographer dashboard |
+| Phase 6: User Story 4 | ⏳ Not Started | T120-T132 | 0/13 | Runner accounts |
+| Phase 7: Polish | ⏳ Not Started | T133-T150 | 0/18 | Cross-cutting concerns |
 
-### MVP Milestone Achieved ✅
+---
 
-**Status**: App is running and functional at `localhost:3000`
+## Implementation Status
 
-The MVP (User Story 1) is now functional:
-- ✅ Bib number search returns watermarked photos
-- ✅ Photo preview with zoom capability
-- ✅ Shopping cart with bundle pricing
-- ✅ Guest checkout via Stripe (UI ready, needs Stripe test keys)
-- ✅ Checkout success page with download links
-- ✅ Download API with signed URLs
-- ✅ Home page with feature highlights and navigation
+### What's Built ✅
 
-### Dependencies Added
+#### Pages & Routes
+| Route | Status | File |
+|-------|--------|------|
+| Home | ✅ | `src/app/page.tsx` |
+| Search | ✅ | `src/app/(public)/search/page.tsx` |
+| Photo Detail | ✅ | `src/app/(public)/photos/[id]/page.tsx` |
+| Checkout | ✅ | `src/app/(public)/checkout/page.tsx` |
+| Checkout Success | ✅ | `src/app/(public)/checkout/success/page.tsx` |
+| Error/Loading/404 | ✅ | `src/app/error.tsx`, `loading.tsx`, `not-found.tsx` |
 
-```json
-{
-  "lucide-react": "^0.468.0"  // Icons for UI
-}
-```
+#### API Routes
+| Endpoint | Method | Status | Purpose |
+|----------|--------|--------|---------|
+| `/api/search` | GET | ✅ | Bib number search |
+| `/api/photos/[id]` | GET | ✅ | Photo detail |
+| `/api/checkout/session` | POST | ✅ | Create Stripe session |
+| `/api/checkout/session/[id]` | GET | ✅ | Session status |
+| `/api/downloads/[transactionId]` | GET | ✅ | Signed download URLs |
+| `/api/webhooks/stripe` | POST | ✅ | Payment webhook |
+
+#### Components
+| Category | Components | Status |
+|----------|------------|--------|
+| UI | Button, Input, Card, Modal, Spinner, Toast | ✅ |
+| Search | SearchInput, SearchResults, NoResults | ✅ |
+| Photos | PhotoCard, PhotoPreviewModal | ✅ |
+| Checkout | Cart, CartSummary, DownloadList | ✅ |
+| Providers | AuthProvider | ✅ |
+
+#### Libraries
+| File | Status | Purpose |
+|------|--------|---------|
+| `lib/supabase/client.ts` | ✅ | Browser Supabase client |
+| `lib/supabase/server.ts` | ✅ | Server Supabase client |
+| `lib/supabase/storage.ts` | ✅ | Signed URL generation |
+| `lib/stripe/client.ts` | ✅ | Stripe SDK + webhook verification |
+| `lib/utils/pricing.ts` | ✅ | Bundle pricing (70/30 split) |
+| `lib/utils/images.ts` | ✅ | Image URL utilities |
+| `lib/store/cart.ts` | ✅ | Zustand cart state |
+
+#### Database (All Migrations Applied)
+| Migration | Tables/Features |
+|-----------|-----------------|
+| 001-009 | ✅ user_profiles, events, photos, photo_bibs, transactions, transaction_items, payouts, views, functions |
+
+#### Tests
+| Type | Files | Status |
+|------|-------|--------|
+| Unit | `tests/unit/pricing.test.ts` | ✅ |
+| Integration | `tests/integration/search.test.ts` | ✅ |
+| E2E | `tests/e2e/search.spec.ts`, `checkout.spec.ts`, `download.spec.ts` | ✅ |
+
+---
+
+### What's Missing ❌
+
+#### Phase 4: Photographer Upload (T066-T098)
+| Feature | Components/Files Needed |
+|---------|------------------------|
+| Auth routes | `src/app/(auth)/` route group |
+| Signup page | `src/app/(auth)/signup/page.tsx` |
+| Stripe Connect | `src/lib/stripe/connect.ts`, `/api/auth/stripe-connect/*` |
+| Event management | `src/app/(auth)/dashboard/events/`, `/api/events` |
+| Bulk upload | `src/components/upload/*`, `/api/upload/presigned`, `/api/upload/complete` |
+| AI bib detection | `supabase/functions/process-photo/`, Azure Vision integration |
+| Manual review | `src/components/dashboard/PhotoReviewCard.tsx`, `BibEntryForm.tsx` |
+
+#### Phase 5: Photographer Dashboard (T099-T119)
+| Feature | Components/Files Needed |
+|---------|------------------------|
+| Dashboard stats | `src/components/dashboard/DashboardStats.tsx`, `SalesChart.tsx` |
+| Real-time updates | `src/hooks/useSalesSubscription.ts` |
+| Payout history | `src/components/dashboard/PayoutHistory.tsx`, `/api/dashboard/payouts` |
+
+#### Phase 6: Runner Accounts (T120-T132)
+| Feature | Components/Files Needed |
+|---------|------------------------|
+| Login page | `src/app/(auth)/login/page.tsx` |
+| Order history | `src/app/(auth)/account/orders/page.tsx` |
+| Notifications | `supabase/functions/notify-runner/` |
+
+#### Phase 7: Polish (T133-T150)
+| Feature | Files Needed |
+|---------|-------------|
+| Rate limiting | `src/middleware.ts` |
+| PWA offline | `src/lib/pwa/service-worker.ts` |
+| Error tracking | Sentry integration |
+
+---
 
 ### Environment Setup
 
-**Supabase Configuration**:
-- Using cloud Supabase (local Docker had WSL2 compatibility issues on Windows)
-- Project URL: `https://ipqfebnelpmpzsjhiitu.supabase.co`
-- Database migrations applied via `npx supabase db push`
-- Seed data applied manually via Supabase SQL Editor
+**Supabase**: Cloud instance at `https://ipqfebnelpmpzsjhiitu.supabase.co`
 
-**Required Environment Variables** (`.env.local`):
-```
-NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
+**Required `.env.local`**:
+```bash
+NEXT_PUBLIC_SUPABASE_URL=<your-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-key>
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
+# Phase 4+ will need:
+AZURE_VISION_ENDPOINT=<azure-endpoint>
+AZURE_VISION_KEY=<azure-key>
 ```
 
-**Test Data**:
-- Test bib numbers: `12345` (3 photos), `12346` (1 photo), `67890` (1 photo)
-- Test events: Boston Marathon 2026, NYC Half Marathon 2026, Chicago 10K 2026
+**Test Data**: Bibs `12345`, `12346`, `67890` | Events: Boston Marathon, NYC Half, Chicago 10K
 
-### Known Issues / Workarounds
+---
 
-1. **Local Supabase on Windows**: Docker containers crash due to WSL2 `RLIMIT_NOFILE` issue. Workaround: Use cloud Supabase.
-2. **Seed data URLs**: Photos use placeholder URLs; real implementation needs Supabase Storage URLs.
-3. **Stripe keys**: Using placeholder test keys; replace with actual Stripe test keys for payment testing.
+### Known Issues
 
-### Next Steps
+1. **Local Supabase on Windows**: WSL2 compatibility issue. Use cloud Supabase.
+2. **Photo URLs**: Using placeholder URLs from picsum.photos; production needs Supabase Storage.
+3. **Stripe**: Placeholder test keys; configure real test keys for payment testing.
 
-To continue development:
-1. Set up real Stripe test keys in `.env.local`
-2. Configure Supabase Storage buckets for photo uploads
-3. Begin Phase 4 (User Story 2) - Photographer upload flow
+---
+
+### Next Steps (Priority Order)
+
+1. **Configure Stripe test keys** - Enable end-to-end payment testing
+2. **Set up Supabase Storage buckets** - `photos-original`, `photos-watermarked`, `photos-thumbnails`
+3. **Create `(auth)` route group** - Prerequisite for all photographer features
+4. **Implement Stripe Connect** - T072-T075 (photographer onboarding)
+5. **Build upload flow** - T081-T086 (bulk upload with presigned URLs)
+6. **Deploy Azure Vision Edge Function** - T087-T094 (AI bib detection)
 
 ---
 
