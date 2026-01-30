@@ -1,38 +1,11 @@
--- Seed data for development testing
--- This creates test users, events, photos, and bibs for local development
+-- Update photos to use real marathon runner images
+-- First delete existing photo_bibs and photos, then re-insert
 
--- Create test user in auth.users first (required for foreign key constraints)
-INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, created_at, updated_at, aud, role)
-VALUES (
-    '00000000-0000-0000-0000-000000000001',
-    '00000000-0000-0000-0000-000000000000',
-    'photographer@test.com',
-    crypt('password123', gen_salt('bf')),
-    now(),
-    now(),
-    now(),
-    'authenticated',
-    'authenticated'
-) ON CONFLICT DO NOTHING;
+-- Delete existing data (cascade will handle photo_bibs)
+DELETE FROM public.photo_bibs;
+DELETE FROM public.photos;
 
--- Create corresponding user_profiles entry
-INSERT INTO public.user_profiles (id, display_name, role)
-VALUES (
-    '00000000-0000-0000-0000-000000000001',
-    'Test Photographer',
-    'photographer'
-) ON CONFLICT DO NOTHING;
-
--- Sample events
-INSERT INTO public.events (id, name, date, location, description, created_by, is_active)
-VALUES
-    ('11111111-1111-1111-1111-111111111111', 'Boston Marathon 2026', '2026-04-20', 'Boston, MA', 'The 130th running of the Boston Marathon', '00000000-0000-0000-0000-000000000001', true),
-    ('22222222-2222-2222-2222-222222222222', 'NYC Half Marathon 2026', '2026-03-15', 'New York, NY', 'The annual NYC Half Marathon through Manhattan', '00000000-0000-0000-0000-000000000001', true),
-    ('33333333-3333-3333-3333-333333333333', 'Chicago 10K 2026', '2026-05-01', 'Chicago, IL', 'Spring 10K race along the lakefront', '00000000-0000-0000-0000-000000000001', true)
-ON CONFLICT DO NOTHING;
-
--- Sample photos for testing search
--- Using Unsplash marathon/runner photos for realistic demo data
+-- Insert new photos with runner images from Unsplash
 INSERT INTO public.photos (id, photographer_id, event_id, original_url, watermarked_url, thumbnail_url, quality_score, ocr_status, ocr_confidence, price_cents, is_visible)
 VALUES
     -- Boston Marathon photos
@@ -83,10 +56,9 @@ VALUES
      'https://images.unsplash.com/photo-1502904550040-7534597429ae?w=1200',
      'https://images.unsplash.com/photo-1502904550040-7534597429ae?w=800',
      'https://images.unsplash.com/photo-1502904550040-7534597429ae?w=300',
-     0.75, 'manual_review', 0.55, 100, false)
-ON CONFLICT DO NOTHING;
+     0.75, 'manual_review', 0.55, 100, false);
 
--- Sample bib detections
+-- Insert bib detections
 INSERT INTO public.photo_bibs (photo_id, bib_number, confidence, is_verified)
 VALUES
     -- Runner 12345 appears in multiple events
@@ -106,11 +78,4 @@ VALUES
     ('22222222-aaaa-bbbb-cccc-dddddddddddd', '88888', 0.97, true),
     ('22222222-aaaa-bbbb-cccc-dddddddddddd', '77777', 0.93, true),
     -- Manual review photo
-    ('33333333-aaaa-bbbb-cccc-dddddddddddd', '12345', 0.55, false)
-ON CONFLICT DO NOTHING;
-
--- Note: To fully test, you'll need to:
--- 1. Create a test user through Supabase Auth UI
--- 2. Update the photographer_id (00000000-0000-0000-0000-000000000001) with the real user UUID
--- 3. Upload actual images to Supabase Storage
--- 4. Update the URLs to point to real storage paths
+    ('33333333-aaaa-bbbb-cccc-dddddddddddd', '12345', 0.55, false);
